@@ -4,6 +4,7 @@ using Dotnet.Chroma.Repositories.Models;
 using Dotnet.Chroma.Repositories.Models.Client.Response;
 using Dotnet.Chroma.Repositories.Models.Enums;
 using Dotnet.Chroma.Repositories.Models.Exceptions;
+using Dotnet.Chroma.Repositories.Models.Interfaces;
 using Dotnet.Chroma.Repositories.Models.Metadata;
 using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel;
@@ -60,7 +61,7 @@ namespace Dotnet.Chroma.Repositories
     /// </summary>
     /// <typeparam name="TCol">The ChromaCollection type that groups the data</typeparam>
     /// <typeparam name="TChunk">The ChromaChunk model for the repository</typeparam>
-    public abstract class  ChromaRepository<TCol, TChunk> where TCol : ChromaChunksCollection<TChunk> where TChunk : ChromaChunk
+    public abstract class  ChromaRepository<TCol, TChunk> : IChromaRepository<TCol, TChunk> where TCol : ChromaChunksCollection<TChunk> where TChunk : ChromaChunk
     {
         private readonly IChromaClient _dbClient;
         protected readonly ChromaSettings _settings;
@@ -440,7 +441,7 @@ namespace Dotnet.Chroma.Repositories
                 embeddingModel = _settings.EmbeddingModel;
 
             if (dimensions <= 0)
-                dimensions = _settings.EmbeddingsDimension;
+                dimensions = _settings.EmbeddingDimensions;
 
             var metadata = new Dictionary<string, object>();
 
@@ -702,7 +703,7 @@ namespace Dotnet.Chroma.Repositories
             {
                 { nameof(ChromaMetadata.TYPE).ToLower(), EChunkType.COLLECTION },
                 { nameof(ChromaCollectionMetadata.MODEL).ToLower(), embeddingModel ?? _settings.EmbeddingModel },
-                { nameof(ChromaCollectionMetadata.DIMENSIONS).ToLower(), dimensions == null || dimensions <= 0 ? _settings.EmbeddingsDimension : dimensions },
+                { nameof(ChromaCollectionMetadata.DIMENSIONS).ToLower(), dimensions == null || dimensions <= 0 ? _settings.EmbeddingDimensions : dimensions },
                 { nameof(ChromaCollectionMetadata.TOTAL_CHUNKS).ToLower(), 0 }
             };
     }

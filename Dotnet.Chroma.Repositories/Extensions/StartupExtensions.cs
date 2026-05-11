@@ -1,4 +1,5 @@
 ﻿using Dotnet.Chroma.Repositories.Models;
+using Dotnet.Chroma.Repositories.Models.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -11,6 +12,13 @@ namespace Dotnet.Chroma.Repositories.Extensions
         public static IServiceCollection AddChromaConfiguration(this IServiceCollection services, IConfiguration configuration)
             => services.Configure<ChromaSettings>(configuration.GetSection(nameof(ChromaSettings)));
 
+        public static IServiceCollection AddDefaultChromaRepository(this IServiceCollection services, ServiceLifetime lifetime = ServiceLifetime.Scoped)
+            => lifetime switch {
+                ServiceLifetime.Scoped => services.AddScoped<IChromaChunksRepository, ChromaChunksRepository>(),
+                ServiceLifetime.Transient => services.AddTransient<IChromaChunksRepository, ChromaChunksRepository>(),
+                ServiceLifetime.Singleton => services.AddSingleton<IChromaChunksRepository, ChromaChunksRepository>(),
+                _ => services.AddScoped<IChromaChunksRepository, ChromaChunksRepository>()
+            };
 
 #pragma warning disable SKEXP0020 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
         /// <summary>

@@ -6,8 +6,13 @@
     /// </summary>
     public class ChromaSettings
     {
-        public string ServerUrl { get; set; } = "http://localhost:9000";
-        public string EmbeddingModel { get; set; } = "nomic-text-embed";
-        public int EmbeddingsDimension { get; set; } = 512;
+        public ChromaSettings() { }
+
+        public ChromaSettings(string url) { ServerUrl = url; }
+        public ChromaSettings(string model, int dimensions) { EmbeddingModel = model; EmbeddingDimensions = dimensions; }
+        public ChromaSettings(string url, string model, int dimensions) : this(model, dimensions) { ServerUrl = url; }
+        public string ServerUrl { get; set; } = "http://localhost:8000";
+        public string EmbeddingModel { get; set; } = "nomic-embed-text";
+        public int EmbeddingDimensions { get; set; } = 512;
     }
 }
