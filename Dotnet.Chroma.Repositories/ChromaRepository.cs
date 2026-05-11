@@ -63,7 +63,7 @@ namespace Dotnet.Chroma.Repositories
     public abstract class  ChromaRepository<TCol, TChunk> where TCol : ChromaChunksCollection<TChunk> where TChunk : ChromaChunk
     {
         private readonly IChromaClient _dbClient;
-        private readonly ChromaSettings _settings;
+        protected readonly ChromaSettings _settings;
         
         public ChromaRepository(IChromaClient client, IOptions<ChromaSettings> settings)
         {
