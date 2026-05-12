@@ -1,4 +1,6 @@
 ﻿
+using Dotnet.Chroma.Repositories.Models.Enums;
+
 namespace Dotnet.Chroma.Repositories.Models.Interfaces
 {
 #pragma warning disable SKEXP0020 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
@@ -15,7 +17,7 @@ namespace Dotnet.Chroma.Repositories.Models.Interfaces
         Task<TCol> InspectCollection(string name, List<string> chunkIds, bool includeEmbeddings = false);
         Task<TCol> GetCollection(string collection);
         Task<TCol> GetCollectionPage(string collection, Dictionary<string, object>? filters = null, bool withEmbeddings = true, int pageSize = 10, int page = 0);
-        Task<TCol> CreateCollection(string collection, string description, string? model = null, int? dimensions = null);
+        Task<TCol> CreateCollection(string collection, string description, string? model = null, int? dimensions = null, int chunkType = (int)EChunkType.DOCUMENT);
         Task<TCol> CreateCollection(string name, ChromaChunk data);
         Task<TCol> UpdateCollectionData(string name, Dictionary<string, object> metadata, bool isOverride = true);
         Task<bool> DeleteCollection(string collection);

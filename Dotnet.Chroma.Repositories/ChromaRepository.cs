@@ -47,11 +47,11 @@ namespace Dotnet.Chroma.Repositories
     /// 
     /// ### METADATA: Chroma allows to add metadata to a chunk that can be used to filter the data in a similarity search. These are Key-Value pairs of any type.
     /// 
-    /// Depending on the type of data you are working with, you may need to add different types of metadata so, in order to handle that, a CHROMA METADATA class is being
+    ///     Depending on the type of data you are working with, you may need to add different types of metadata so, in order to handle that, a CHROMA METADATA class is being
     /// used to deserialize the attached metadata into a specific class that the chunk stores / reads during construction to accquire it's final shape.
     /// Then use the chunk model methods to 'AddMetadata' to add new values or override the existing ones.
     /// 
-    /// Note: In order to enforce the Collectin / Chunk model distinction, Collections have their own Metadata class and Chunks their own class to. Extend 'CollectionMetadata' & 'ChunkMetadata' accordingly in inherited classes
+    /// Note: In order to enforce the Collection / Chunk model distinction, Collections have their own Metadata class and Chunks their own class to. Extend 'CollectionMetadata' & 'ChunkMetadata' accordingly in inherited classes
     /// 
     /// So, the final structures schema is:
     ///     - Collection
@@ -145,7 +145,7 @@ namespace Dotnet.Chroma.Repositories
         /// <param name="model"></param>
         /// <param name="dimensions"></param>
         /// <returns></returns>
-        public async Task<TCol> CreateCollection(string name, string description, string? model = null, int? dimensions = null)
+        public async Task<TCol> CreateCollection(string name, string description, string? model = null, int? dimensions = null, int chunkType = (int)EChunkType.DOCUMENT)
         {
             if (string.IsNullOrEmpty(model))
                 model = _settings.EmbeddingModel;
@@ -155,6 +155,7 @@ namespace Dotnet.Chroma.Repositories
             var dataChunk = new ChromaChunk("0", description, new ReadOnlyMemory<float>([]), metadata);
             
             dataChunk.UpdateType((int)EChunkType.COLLECTION);
+            dataChunk.AddMetadata(nameof(ChromaCollectionMetadata.CHUNK_TYPE).ToLower(), chunkType);
 
             return await CreateCollection(name, dataChunk);
         }
@@ -283,6 +284,7 @@ namespace Dotnet.Chroma.Repositories
                 extraMetas.Keys.ToList().ForEach(key => chunk.AddMetadata(key, extraMetas[key]));
 
             chunk.Id = $"{collection.GetMeta<ChromaCollectionMetadata>().TOTAL_CHUNKS + 1}";
+            chunk.AddMetadata(nameof(ChromaMetadata.TYPE).ToLower(), collection.GetMeta<ChromaCollectionMetadata>().CHUNK_TYPE);
 
             await requestEmbeddingsUpsert(collection.Id, [chunk.Id], [chunk.Text], [chunk.Embedding], [chunk.Metadata], isCreate: true);
 
@@ -324,6 +326,8 @@ namespace Dotnet.Chroma.Repositories
 
                 if (extraTags != null && extraTags.Count() > 0)
                     extraTags.Keys.ToList().ForEach(key => chunk.AddMetadata(key, extraTags[key]));
+
+                chunk.AddMetadata(nameof(ChromaMetadata.TYPE).ToLower(), collection.GetMeta<ChromaCollectionMetadata>().CHUNK_TYPE);
             }
 
             await requestEmbeddingsUpsert(collection.Id, selectedChunks.Select(x => $"{x.Id}").ToList(), selectedChunks.Select(x => x.Text).ToList(), selectedChunks.Select(x => x.Embedding).ToList(), selectedChunks.Select(x => x.Metadata).ToList(), isCreate: true);
@@ -426,6 +430,7 @@ namespace Dotnet.Chroma.Repositories
             var chunk = DefaultChunk(collection.DefaultMetadata.MODEL, collection.DefaultMetadata.DIMENSIONS);
 
             chunk.AddMetadata(nameof(ChromaMetadata.DOCUMENT_NAME).ToLower(), collection.DefaultMetadata.DOCUMENT_NAME);
+            chunk.AddMetadata(nameof(ChromaMetadata.TYPE).ToLower(), collection.GetMeta<ChromaCollectionMetadata>().CHUNK_TYPE);
 
             return chunk;
         }
