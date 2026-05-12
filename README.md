@@ -49,13 +49,12 @@ The SDK utilizes these core classes to handle ChromaDB data:
 
 ### 🏗️ Structures Hierarchy
 
-```mermaid
-graph TD
-    A[Repository&lt;TCol, TChunk&gt;] --> B[Collections&lt;TCol&gt;]
-    B --> C[CollectionMetadata&lt;TCol&gt;]
-    B --> D[Chunks&lt;TChunk&gt; (N)]
-    D --> E[ChunkMetadata&lt;TChunk&gt;]
-```
+- Repository<`TCol`, `TChunk`> of:
+    - Collections<`TCol`> with:
+        - 1 x CollectionMetadata<`TCol`>
+        - N x Chunks<`TChunk`> with:
+            - 1 x ChunkMetadata<`TChunk`> 
+
 
 ## 📚 Class Details
 
