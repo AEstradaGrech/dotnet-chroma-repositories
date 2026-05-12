@@ -103,4 +103,4 @@ It demonstrates handling Files, Chats, and System messages for a RAG application
 
 ---
 
-Made with ❤️ for the .NET community. Contributions welcome! 🌟
+Made with ❤️ for the .NET community. Grab your copy, use it, modify it or do whatever you want with it.  
