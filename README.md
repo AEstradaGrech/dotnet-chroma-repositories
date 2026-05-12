@@ -1,8 +1,8 @@
 # 🚀 dotnet-chroma-repositories
 
-[![NuGet Version](https://img.shields.io/nuget/v/AEG.ChromaDB.Repositories)](https://www.nuget.org/packages/AEG.ChromaDB.Repositories)
+[![NuGet Version](https://img.shields.io/nuget/v/Estrada.ChromaDB.Repositories)](https://www.nuget.org/packages/Estrada.ChromaDB.Repositories)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![.NET](https://img.shields.io/badge/.NET-6.0%2B-purple.svg)](https://dotnet.microsoft.com/)
+[![.NET](https://img.shields.io/badge/.NET-10.0%2B-purple.svg)](https://dotnet.microsoft.com/)
 
 > Lightweight ChromaDB repository SDK for .NET that wraps around the Semantic Kernel Microsoft.SemanticKernel.Connectors.Chroma (for now).
 
