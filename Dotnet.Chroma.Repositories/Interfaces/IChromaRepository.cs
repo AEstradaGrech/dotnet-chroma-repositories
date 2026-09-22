@@ -11,6 +11,7 @@ namespace Dotnet.Chroma.Repositories.Models.Interfaces
     /// <typeparam name="TChunk"></typeparam>
     public interface IChromaRepository<TCol, TChunk> where TCol : ChromaChunksCollection<TChunk> where TChunk : ChromaChunk
     {
+        Task<IEnumerable<string>> GetCollections();
         Task<IAsyncEnumerable<string>> GetDbCollections();
         Task<bool> CollectionExists(string name);
         Task<List<TCol>> CollectionsOf(int typeEnum);

@@ -1,11 +1,13 @@
 ﻿
 using Dotnet.Chroma.Repositories.Extensions;
+using Dotnet.Chroma.Repositories.Interfaces;
 using Dotnet.Chroma.Repositories.Models;
 using Dotnet.Chroma.Repositories.Models.Client.Response;
 using Dotnet.Chroma.Repositories.Models.Enums;
 using Dotnet.Chroma.Repositories.Models.Exceptions;
 using Dotnet.Chroma.Repositories.Models.Interfaces;
 using Dotnet.Chroma.Repositories.Models.Metadata;
+using Dotnet.Chroma.Repositories.Models.Settings;
 using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.Chroma;
@@ -64,11 +66,13 @@ namespace Dotnet.Chroma.Repositories
     public abstract class  ChromaRepository<TCol, TChunk> : IChromaRepository<TCol, TChunk> where TCol : ChromaChunksCollection<TChunk> where TChunk : ChromaChunk
     {
         private readonly IChromaClient _dbClient;
+        private readonly IChromaDbClient _client;
         protected readonly ChromaSettings _settings;
         
-        public ChromaRepository(IChromaClient client, IOptions<ChromaSettings> settings)
+        public ChromaRepository(IChromaClient client, IChromaDbClient dbClient, IOptions<ChromaSettings> settings)
         {
             _dbClient = client ?? throw new ArgumentNullException(nameof(client));
+            _client = dbClient ?? throw new ArgumentNullException(nameof(dbClient));
             _settings = settings.Value ?? new ChromaSettings();
         }
 
@@ -79,6 +83,8 @@ namespace Dotnet.Chroma.Repositories
         public async Task<IAsyncEnumerable<string>> GetDbCollections()
             => _dbClient.ListCollectionsAsync();
 
+        public async Task<IEnumerable<string>> GetCollections()
+            => await _client.GetCollections();
         /// <summary>
         /// Gets a Collection of type TCol by it's name
         /// Gets the Collection Chunk (ID=0) and 'transforms' it to TCol using the constructors system

@@ -1,9 +1,11 @@
-﻿using Dotnet.Chroma.Repositories.Models;
+﻿using Dotnet.Chroma.Repositories.Interfaces;
 using Dotnet.Chroma.Repositories.Models.Interfaces;
+using Dotnet.Chroma.Repositories.Models.Settings;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel.Connectors.Chroma;
+using System.Net.Http.Headers;
 
 namespace Dotnet.Chroma.Repositories.Extensions
 {
@@ -20,6 +22,17 @@ namespace Dotnet.Chroma.Repositories.Extensions
                 _ => services.AddScoped<IChromaChunksRepository, ChromaChunksRepository>()
             };
 
+        public static IServiceCollection AddChromaDbClient(this IServiceCollection services, IConfiguration configuration)
+        {
+            services.AddHttpClient<IChromaDbClient, ChromaDbClient>(client =>
+            {
+                var cfg = configuration.GetSection(nameof(ChromaSettings)).Get<ChromaSettings>();
+                client.BaseAddress = new Uri(cfg.ServerUrl);
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            });
+
+            return services;
+        }
 #pragma warning disable SKEXP0020 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
         /// <summary>
         /// Helper method to register the SK IChromaClient configuring it from the app ChromaSettings

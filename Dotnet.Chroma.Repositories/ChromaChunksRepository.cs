@@ -1,5 +1,7 @@
-﻿using Dotnet.Chroma.Repositories.Models;
+﻿using Dotnet.Chroma.Repositories.Interfaces;
+using Dotnet.Chroma.Repositories.Models;
 using Dotnet.Chroma.Repositories.Models.Interfaces;
+using Dotnet.Chroma.Repositories.Models.Settings;
 using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel.Connectors.Chroma;
 
@@ -12,6 +14,6 @@ namespace Dotnet.Chroma.Repositories
     /// </summary>
     public class ChromaChunksRepository : ChromaRepository<ChromaChunksCollection<ChromaChunk>, ChromaChunk>, IChromaChunksRepository
     {
-        public ChromaChunksRepository(IOptions<ChromaSettings> dbSettings, IChromaClient client) : base(client, dbSettings) { }
+        public ChromaChunksRepository(IOptions<ChromaSettings> dbSettings, IChromaClient client, IChromaDbClient dbClient) : base(client, dbClient, dbSettings) { }
     }
 }
