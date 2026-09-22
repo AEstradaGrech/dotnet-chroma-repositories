@@ -84,7 +84,7 @@ namespace Dotnet.Chroma.Repositories
             => _dbClient.ListCollectionsAsync();
 
         public async Task<IEnumerable<string>> GetCollections()
-            => await _client.GetCollections();
+            => await _client.ListCollections();
         /// <summary>
         /// Gets a Collection of type TCol by it's name
         /// Gets the Collection Chunk (ID=0) and 'transforms' it to TCol using the constructors system
@@ -717,5 +717,8 @@ namespace Dotnet.Chroma.Repositories
                 { nameof(ChromaCollectionMetadata.DIMENSIONS).ToLower(), dimensions == null || dimensions <= 0 ? _settings.EmbeddingDimensions : dimensions },
                 { nameof(ChromaCollectionMetadata.TOTAL_CHUNKS).ToLower(), 0 }
             };
+
+        public async Task<ChromaCollection> CreateDbCollection(string name, HnswSettings? config = null)
+            => await _client.CreateCollection(name, config);
     }
 }

@@ -1,5 +1,6 @@
 ﻿
 using Dotnet.Chroma.Repositories.Models.Enums;
+using Dotnet.Chroma.Repositories.Models.Settings;
 
 namespace Dotnet.Chroma.Repositories.Models.Interfaces
 {
@@ -12,6 +13,8 @@ namespace Dotnet.Chroma.Repositories.Models.Interfaces
     public interface IChromaRepository<TCol, TChunk> where TCol : ChromaChunksCollection<TChunk> where TChunk : ChromaChunk
     {
         Task<IEnumerable<string>> GetCollections();
+        Task<ChromaCollection> CreateDbCollection(string name, HnswSettings? config = null);
+        //-------------
         Task<IAsyncEnumerable<string>> GetDbCollections();
         Task<bool> CollectionExists(string name);
         Task<List<TCol>> CollectionsOf(int typeEnum);
