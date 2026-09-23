@@ -2,6 +2,7 @@
 using Dotnet.Chroma.Repositories.Extensions;
 using Dotnet.Chroma.Repositories.Interfaces;
 using Dotnet.Chroma.Repositories.Models;
+using Dotnet.Chroma.Repositories.Models.Client.Request;
 using Dotnet.Chroma.Repositories.Models.Client.Response;
 using Dotnet.Chroma.Repositories.Models.Enums;
 using Dotnet.Chroma.Repositories.Models.Exceptions;
@@ -65,13 +66,13 @@ namespace Dotnet.Chroma.Repositories
     /// <typeparam name="TChunk">The ChromaChunk model for the repository</typeparam>
     public abstract class  ChromaRepository<TCol, TChunk> : IChromaRepository<TCol, TChunk> where TCol : ChromaChunksCollection<TChunk> where TChunk : ChromaChunk
     {
-        private readonly IChromaClient _dbClient;
+        //private readonly IChromaClient _dbClient;
         private readonly IChromaDbClient _client;
         protected readonly ChromaSettings _settings;
         
         public ChromaRepository(IChromaClient client, IChromaDbClient dbClient, IOptions<ChromaSettings> settings)
         {
-            _dbClient = client ?? throw new ArgumentNullException(nameof(client));
+            //_dbClient = client ?? throw new ArgumentNullException(nameof(client));
             _client = dbClient ?? throw new ArgumentNullException(nameof(dbClient));
             _settings = settings.Value ?? new ChromaSettings();
         }
@@ -195,7 +196,16 @@ namespace Dotnet.Chroma.Repositories
 
             data.Id = "0";
             data.Embedding = null;
-            await requestEmbeddingsUpsert(collection.Id, [data.Id], [data.Text], null, [data.Metadata], isCreate: true);
+            var upserted = await _client.UpsertDocument(collection.Id, new ChromaClientUpsertRequest
+            {
+                Ids = [data.Id],
+                Documents = [data.Text],
+                Embeddings = [data.Embedding],
+                Metadatas = [data.Metadata]
+            });
+
+            if (!upserted)
+                throw new InvalidOperationException("Failed to upsert document");
 
             return await GetCollection(name);
         }
@@ -255,7 +265,16 @@ namespace Dotnet.Chroma.Repositories
                 if (extraTags != null && extraTags.Count() > 0)
                     extraTags.Keys.ToList().ForEach(key => chunk.AddMetadata(key, extraTags[key], resetDefault: true));
 
-                await requestEmbeddingsUpsert(collection.Id, [chunk.Id], [chunk.Text], [chunk.Embedding], [chunk.Metadata]);
+                var upserted = await _client.UpsertDocument(collection.Id, new ChromaClientUpsertRequest
+                {
+                    Ids = [chunk.Id],
+                    Documents = [chunk.Text],
+                    Embeddings = [chunk.Embedding],
+                    Metadatas = [chunk.Metadata]
+                });
+
+                if (!upserted)
+                    throw new InvalidOperationException("Failed to upsert document");
 
                 return await GetChunkById(collectionName, chunk.Id);
             }
@@ -291,7 +310,16 @@ namespace Dotnet.Chroma.Repositories
             chunk.Id = $"{collection.GetMeta<ChromaCollectionMetadata>().TOTAL_CHUNKS + 1}";
             chunk.AddMetadata(nameof(ChromaMetadata.TYPE).ToLower(), collection.GetMeta<ChromaCollectionMetadata>().CHUNK_TYPE);
 
-            await requestEmbeddingsUpsert(collection.Id, [chunk.Id], [chunk.Text], [chunk.Embedding], [chunk.Metadata], isCreate: true);
+            var upserted = await _client.UpsertDocument(collection.Id, new ChromaClientUpsertRequest
+            {
+                Ids = [chunk.Id],
+                Documents = [chunk.Text],
+                Embeddings = [chunk.Embedding],
+                Metadatas = [chunk.Metadata]
+            });
+
+            if (!upserted)
+                throw new InvalidOperationException("Failed to upsert document");
 
             await updateCollectionChunksCount(collectionName, bIncrease: true);
 
@@ -335,7 +363,16 @@ namespace Dotnet.Chroma.Repositories
                 chunk.AddMetadata(nameof(ChromaMetadata.TYPE).ToLower(), collection.GetMeta<ChromaCollectionMetadata>().CHUNK_TYPE);
             }
 
-            await requestEmbeddingsUpsert(collection.Id, selectedChunks.Select(x => $"{x.Id}").ToList(), selectedChunks.Select(x => x.Text).ToList(), selectedChunks.Select(x => x.Embedding).ToList(), selectedChunks.Select(x => x.Metadata).ToList(), isCreate: true);
+            var upserted = await _client.UpsertDocument(collection.Id, new ChromaClientUpsertRequest
+            {
+                Ids = selectedChunks.Select(x => $"{x.Id}").ToList(),
+                Documents = selectedChunks.Select(x => x.Text).ToList(),
+                Embeddings = selectedChunks.Select(x => x.Embedding).ToList(),
+                Metadatas = selectedChunks.Select(x => x.Metadata).ToList()
+            });
+
+            if(!upserted)
+                throw new InvalidOperationException("Failed to upsert documents");
 
             await updateCollectionChunksCount(collectionName, bIncrease: true, amount: selectedChunks.Count());
 
@@ -367,7 +404,7 @@ namespace Dotnet.Chroma.Repositories
         {
             var collection = await GetCollection(collectionName);
 
-            return mapChunks(await requestDocuments(collection.Id, chunkIds, withEmbeddings), withEmbeddings);
+            return mapChunks(await _client.GetDocuments(collection.Id, chunkIds, withEmbeddings), withEmbeddings);
         }
 
         /// <summary>
@@ -413,7 +450,7 @@ namespace Dotnet.Chroma.Repositories
         {
             var collection = await GetCollection(collectionName);
 
-            return mapChunks(await requestDocuments(collection.Id, withEmbeddings, filters, pageSize, skip), withEmbeddings);
+            return mapChunks(await _client.FilterDocuments(collection.Id, filters, withEmbeddings, pageSize, skip), withEmbeddings);
         }
 
         /// <summary>
@@ -485,7 +522,7 @@ namespace Dotnet.Chroma.Repositories
 
             var collection = await _client.GetCollection(collectionName);
 
-            var chunks = await requestDocuments(collection.Id, [id], withEmbeddings: true);
+            var chunks = await _client.GetDocuments(collection.Id, [id], withEmbeddings: true);
 
             return mapChunks(chunks, withEmbeddings: true).FirstOrDefault();
         }
@@ -504,16 +541,14 @@ namespace Dotnet.Chroma.Repositories
 
             var collection = await _client.GetCollection(collectionName);
 
-            await requestDelete(collection.Id, [id]);
+            var deletedCount = await _client.DeleteDocuments(collection.Id, [id]);
 
-            var chunk = await GetChunkById(collection.Name, id);
+            if (deletedCount == 0)
+                throw new InvalidOperationException($"Failed to delete chunk {id} from collection {collectionName}");
 
-            bool bSucceeded = chunk == null;
+            await updateCollectionChunksCount(collection.Name, bIncrease: false);
 
-            if (bSucceeded)
-                await updateCollectionChunksCount(collection.Name, bIncrease: false);
-
-            return bSucceeded;
+            return deletedCount > 0;
         }
 
         /// <summary>
@@ -533,7 +568,16 @@ namespace Dotnet.Chroma.Repositories
 
             metadata.Keys.ToList().ForEach(key => data.AddMetadata(key, metadata[key], isOverride));
 
-            await requestEmbeddingsUpsert(data.Id, ["0"], [data.Description], null, [data.Metadata]);
+            var upserted = await _client.UpsertDocument(data.Id, new ChromaClientUpsertRequest
+            {
+                Ids = ["0"],
+                Documents = [data.Description],
+                Embeddings = null,
+                Metadatas = [data.Metadata]
+            });
+
+            if(!upserted)
+                throw new InvalidOperationException($"An error has occured while updating the collection: {name}");
 
             return await GetCollection(name);
         }
@@ -573,81 +617,81 @@ namespace Dotnet.Chroma.Repositories
 
        
 
-        private async Task<DocumentGetResultModel> requestDocuments(string collectionId, List<string> ids, bool withEmbeddings = true)
-        {
-            try
-            {
-                return null; // await _dbClient.GetDocuments(_settings.ServerUrl, collectionId, ids, withEmbeddings: withEmbeddings);
-            }
-            catch (HttpOperationException ex)
-            {
-                var error = handleChromaClientError(ex);
+        //private async Task<DocumentGetResultModel> requestDocuments(string collectionId, List<string> ids, bool withEmbeddings = true)
+        //{
+        //    try
+        //    {
+        //        return null; // await _dbClient.GetDocuments(_settings.ServerUrl, collectionId, ids, withEmbeddings: withEmbeddings);
+        //    }
+        //    catch (HttpOperationException ex)
+        //    {
+        //        var error = handleChromaClientError(ex);
 
-                throw new ChromaClientException(error.Code, $"{nameof(requestDocuments)} >> {error.Error}");
-            }
-        }
+        //        throw new ChromaClientException(error.Code, $"{nameof(requestDocuments)} >> {error.Error}");
+        //    }
+        //}
 
-        private async Task<DocumentGetResultModel> requestDocuments(string collectionId, bool withEmbeddings, Dictionary<string, object>? filters = null, int? pageSize = null, int? skip = null)
-        {
-            try
-            {
-                return await _dbClient.GetDocuments(_settings.ServerUrl, collectionId, withEmbeddings, filters, pageSize, skip);
-            }
-            catch (HttpOperationException ex)
-            {
-                var error = handleChromaClientError(ex);
+        //private async Task<DocumentGetResultModel> requestDocuments(string collectionId, bool withEmbeddings, Dictionary<string, object>? filters = null, int? pageSize = null, int? skip = null)
+        //{
+        //    try
+        //    {
+        //        return await _dbClient.GetDocuments(_settings.ServerUrl, collectionId, withEmbeddings, filters, pageSize, skip);
+        //    }
+        //    catch (HttpOperationException ex)
+        //    {
+        //        var error = handleChromaClientError(ex);
 
-                throw new ChromaClientException(error.Code, $"{nameof(requestDocuments)} >> {error.Error}");
-            }
-        }
+        //        throw new ChromaClientException(error.Code, $"{nameof(requestDocuments)} >> {error.Error}");
+        //    }
+        //}
 
         //null = keep current, value = override
-        private async Task<DocumentGetResultModel> requestEmbeddingsUpsert(string collectionId, List<string> ids, List<string>? texts, List<ReadOnlyMemory<float>>? embeddings, List<Dictionary<string, object>>? metadatas = null, bool isCreate = false)
-        {
-            try
-            {
-                return await _dbClient.UpsertDocuments(_settings.ServerUrl, collectionId, ids, texts, embeddings, metadatas, isCreate);
-            }
-            catch (HttpOperationException ex)
-            {
-                var error = handleChromaClientError(ex);
+        //private async Task<DocumentGetResultModel> requestEmbeddingsUpsert(string collectionId, List<string> ids, List<string>? texts, List<ReadOnlyMemory<float>>? embeddings, List<Dictionary<string, object>>? metadatas = null, bool isCreate = false)
+        //{
+        //    try
+        //    {
+        //        return await _dbClient.UpsertDocuments(_settings.ServerUrl, collectionId, ids, texts, embeddings, metadatas, isCreate);
+        //    }
+        //    catch (HttpOperationException ex)
+        //    {
+        //        var error = handleChromaClientError(ex);
 
-                throw new ChromaClientException(error.Code, $"{nameof(requestEmbeddingsUpsert)} >> {error.Error}");
-            }
-        }
+        //        throw new ChromaClientException(error.Code, $"{nameof(requestEmbeddingsUpsert)} >> {error.Error}");
+        //    }
+        //}
 
-        private async Task requestDelete(string collectionId, List<string> ids)
-        {
-            try
-            {
-                await _dbClient.DeleteEmbeddingsAsync(collectionId, ids.ToArray());
-            }
-            catch (HttpOperationException ex)
-            {
-                var error = handleChromaClientError(ex);
+        //private async Task requestDelete(string collectionId, List<string> ids)
+        //{
+        //    try
+        //    {
+        //        await _dbClient.DeleteEmbeddingsAsync(collectionId, ids.ToArray());
+        //    }
+        //    catch (HttpOperationException ex)
+        //    {
+        //        var error = handleChromaClientError(ex);
 
-                throw new ChromaClientException(error.Code, $"{nameof(requestDelete)} >> {error.Error}");
-            }
-        }
+        //        throw new ChromaClientException(error.Code, $"{nameof(requestDelete)} >> {error.Error}");
+        //    }
+        //}
 
         private async Task<DocumentsQueryResultModel> requestQuery(string collectionId, ReadOnlyMemory<float> queryEmbeddings, int nResults, Dictionary<string, object> filters)
         {
             try
             {
-                return await _dbClient.QueryDocuments(_settings.ServerUrl, collectionId, [queryEmbeddings], nResults, filters);
+                return null; // await _dbClient.QueryDocuments(_settings.ServerUrl, collectionId, [queryEmbeddings], nResults, filters);
             }
             catch (HttpOperationException ex)
             {
                 var error = handleChromaClientError(ex);
 
-                throw new ChromaClientException(error.Code, $"{nameof(requestDelete)} >> {error.Error}");
+                throw new ChromaClientException(error.Code, $"{nameof(requestQuery)} >> {error.Error}");
             }
         }
 
         private ChromaClientError handleChromaClientError(HttpOperationException ex)
             => !string.IsNullOrEmpty(ex.ResponseContent) ? JsonSerializer.Deserialize<ChromaClientError>(ex.ResponseContent) : new ChromaClientError { Error = ex.Message, Code = HttpStatusCode.InternalServerError };
 
-        private List<TChunk> mapChunks(DocumentGetResultModel query, bool withEmbeddings)
+        private List<TChunk> mapChunks(ChromaDocumentModel query, bool withEmbeddings)
         {
             var results = new List<TChunk>();
 
@@ -673,7 +717,13 @@ namespace Dotnet.Chroma.Repositories
 
             collection.AddMetadata(nameof(ChromaCollectionMetadata.TOTAL_CHUNKS).ToLower(), collection.GetMeta<ChromaCollectionMetadata>().TOTAL_CHUNKS + (bIncrease ? Math.Abs(amount) : -Math.Abs(amount)));
 
-            await requestEmbeddingsUpsert(collection.Id, ["0"], [collection.Description], [], [collection.Metadata]);
+            await _client.UpsertDocument(collection.Id, new ChromaClientUpsertRequest
+            {
+                Ids = ["0"],
+                Documents = [collection.Description],
+                Embeddings = [],
+                Metadatas = [collection.Metadata]
+            });
 
             var update = await GetCollection(name);
 

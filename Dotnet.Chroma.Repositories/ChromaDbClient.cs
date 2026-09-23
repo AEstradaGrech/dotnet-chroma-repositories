@@ -81,7 +81,7 @@ namespace Dotnet.Chroma.Repositories
             }
         }
 
-        public async Task<IEnumerable<ChromaDocumentModel>> GetDocuments(string collection, List<string> ids, bool withEmbeddings = true, string? textSearch = null)
+        public async Task<ChromaDocumentModel> GetDocuments(string collection, List<string> ids, bool withEmbeddings = true, string? textSearch = null)
         {
             try
             {
@@ -97,7 +97,7 @@ namespace Dotnet.Chroma.Repositories
 
                 var result = await _httpClient.PostAsJsonAsync($"{_settings.BaseUrl()}/collections/{collection}/get", request);
 
-                return await result.Content.ReadFromJsonAsync<IEnumerable<ChromaDocumentModel>>();
+                return await result.Content.ReadFromJsonAsync<ChromaDocumentModel>();
             }
             catch (Exception ex)
             {
@@ -105,7 +105,7 @@ namespace Dotnet.Chroma.Repositories
             }
         }
 
-        public async Task<IEnumerable<ChromaDocumentModel>> FilterDocuments(string collection, Dictionary<string, object>? filters = null, bool withEmbeddings = false, int? pageSize = null, int? skip = null, List<string>? ids = null, string? textSearch = null)
+        public async Task<ChromaDocumentModel> FilterDocuments(string collection, Dictionary<string, object>? filters = null, bool withEmbeddings = false, int? pageSize = null, int? skip = null, List<string>? ids = null, string? textSearch = null)
         {
             try
             {
@@ -124,7 +124,7 @@ namespace Dotnet.Chroma.Repositories
 
                 var result = await _httpClient.PostAsJsonAsync<ChromaDocumentsRequest>($"{_settings.BaseUrl(collection)}/get", request);
 
-                return await result.Content.ReadFromJsonAsync<IEnumerable<ChromaDocumentModel>>();
+                return await result.Content.ReadFromJsonAsync<ChromaDocumentModel>();
             }
             catch (Exception ex)
             {
@@ -144,6 +144,22 @@ namespace Dotnet.Chroma.Repositories
                 var result = await _httpClient.PostAsJsonAsync($"{_settings.BaseUrl(collection)}/upsert", request);
 
                 return result.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                throw new ChromaClientException(HttpStatusCode.InternalServerError, $"{nameof(GetDocuments)} >> {ex.Message}");
+            }
+        }
+
+        public async Task<int> DeleteDocuments(string collection, List<string> ids)
+        {
+            try
+            {
+                var result = await _httpClient.PostAsJsonAsync($"{_settings.BaseUrl(collection)}/delete", new { ids = ids });
+
+                var resultObject = await result.Content.ReadFromJsonAsync<JsonObject>();
+
+                return resultObject["deleted"].GetValue<int>();
             }
             catch (Exception ex)
             {

@@ -2,7 +2,6 @@
 using Dotnet.Chroma.Repositories.Models.Client.Request;
 using Dotnet.Chroma.Repositories.Models.Client.Response;
 using Dotnet.Chroma.Repositories.Models.Settings;
-using Microsoft.SemanticKernel.Connectors.Chroma;
 
 namespace Dotnet.Chroma.Repositories.Interfaces
 {
@@ -20,7 +19,7 @@ namespace Dotnet.Chroma.Repositories.Interfaces
         /// <param name="ids"></param>
         /// <param name="withEmbeddings"></param>
         /// <returns></returns>
-        Task<IEnumerable<ChromaDocumentModel>> GetDocuments(string collection, List<string> ids, bool withEmbeddings = true, string? textSearch = null);
+        Task<ChromaDocumentModel> GetDocuments(string collection, List<string> ids, bool withEmbeddings = true, string? textSearch = null);
 
         /// <summary>
         /// Get documents with optional filters, pagination, and, optionally, specific ids or text match
@@ -30,8 +29,9 @@ namespace Dotnet.Chroma.Repositories.Interfaces
         /// <param name="skip"></param>
         /// <param name="ids"></param>
         /// <returns></returns>
-        Task<IEnumerable<ChromaDocumentModel>> FilterDocuments(string collection, Dictionary<string, object>? filters = null, bool withEmbeddings = false, int? pageSize = null, int? skip = null, List<string>? ids = null, string? textSearch = null);
+        Task<ChromaDocumentModel> FilterDocuments(string collection, Dictionary<string, object>? filters = null, bool withEmbeddings = false, int? pageSize = null, int? skip = null, List<string>? ids = null, string? textSearch = null);
 
         Task<bool> UpsertDocument(string collectionId, ChromaClientUpsertRequest request);
+        Task<int> DeleteDocuments(string collection, List<string> ids);
     }
 }

@@ -14,19 +14,19 @@ namespace Dotnet.Chroma.Repositories.Models.Client.Response
         // Summary:
         //     List of embedding identifiers.
         [JsonPropertyName("ids")]
-        public List<List<string>> Ids { get; set; } = new List<List<string>>();
+        public List<string> Ids { get; set; } = new List<string>();
 
         //
         // Summary:
         //     List of embedding vectors.
         [JsonPropertyName("embeddings")]
-        public List<List<float[]>> Embeddings { get; set; } = new List<List<float[]>>();
+        public List<float[]> Embeddings { get; set; } = new List<float[]>();
 
         //
         // Summary:
         //     List of embedding metadatas.
         [JsonPropertyName("metadatas")]
-        public List<List<Dictionary<string, object>>> Metadatas { get; set; } = new List<List<Dictionary<string, object>>>();
+        public List<Dictionary<string, object>> Metadatas { get; set; } = new List<Dictionary<string, object>>();
 
         /// <summary>
         /// Chunk text associated with the embedding.
