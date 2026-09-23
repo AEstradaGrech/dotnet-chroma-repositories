@@ -17,5 +17,10 @@
         public string EmbeddingModel { get; set; } = "nomic-embed-text";
         public int EmbeddingDimensions { get; set; } = 512;
         public HnswSettings HnswSettings { get; set; } = new HnswSettings();
+
+        public string BaseUrl(string? collection = null) 
+            => string.IsNullOrEmpty(collection) ? 
+                $"{ServerUrl}/api/v2/tenants/{Tenant}/databases/{Database}" : 
+                $"{ServerUrl}/api/v2/tenants/{Tenant}/databases/{Database}/collections/{collection}";
     }
 }

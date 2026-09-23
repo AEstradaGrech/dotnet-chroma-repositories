@@ -15,7 +15,7 @@ namespace Dotnet.Chroma.Repositories.Models.Interfaces
         Task<IEnumerable<string>> GetCollections();
         Task<ChromaCollection> CreateDbCollection(string name, HnswSettings? config = null);
         //-------------
-        Task<IAsyncEnumerable<string>> GetDbCollections();
+        //Task<IAsyncEnumerable<string>> GetDbCollections();
         Task<bool> CollectionExists(string name);
         Task<List<TCol>> CollectionsOf(int typeEnum);
         Task<TCol> InspectCollection(string name, List<string> chunkIds, bool includeEmbeddings = false);

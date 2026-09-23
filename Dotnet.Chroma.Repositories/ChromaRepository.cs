@@ -80,8 +80,8 @@ namespace Dotnet.Chroma.Repositories
         /// Gets a string list with the name of all DB collections
         /// </summary>
         /// <returns></returns>
-        public async Task<IAsyncEnumerable<string>> GetDbCollections()
-            => _dbClient.ListCollectionsAsync();
+        //public async Task<IAsyncEnumerable<string>> GetDbCollections()
+        //    => _dbClient.ListCollectionsAsync();
 
         public async Task<IEnumerable<string>> GetCollections()
             => await _client.ListCollections();
@@ -94,7 +94,7 @@ namespace Dotnet.Chroma.Repositories
         /// <exception cref="ArgumentNullException"></exception>
         public async Task<TCol> GetCollection(string name)
         {
-            var collection = await requestCollection(name);
+            var collection = await _client.GetCollection(name);
 
             if (collection != null)
             {
@@ -115,11 +115,9 @@ namespace Dotnet.Chroma.Repositories
         /// <returns></returns>
         public async Task<bool> CollectionExists(string name)
         {
-            await foreach (string collection in requestCollectionList())
-                if (collection == name)
-                    return true;
+            var collections = await _client.ListCollections();
 
-            return false;
+            return collections.Any(x => x == name);
         }
 
         /// <summary>
@@ -131,14 +129,17 @@ namespace Dotnet.Chroma.Repositories
         public async Task<List<TCol>> CollectionsOf(int type)
         {
             var results = new List<TCol>();
-            await foreach(var name in _dbClient.ListCollectionsAsync())
+            var collections = await _client.ListCollections();
+            
+            foreach(var name in collections)
             {
                 var collection = await GetCollection(name);
 
                 if (collection.GetMeta<ChromaCollectionMetadata>().CHUNK_TYPE == type)
                     results.Add(collection);
+
             }
-            
+
             return results;
         }
 
@@ -180,9 +181,7 @@ namespace Dotnet.Chroma.Repositories
             if (await CollectionExists(name))
                 throw new InvalidDataException($"An error has occured while creating the chroma collection: a collection with name {name} already exists");
 
-            await requestNewCollection(name);
-
-            var collection = await requestCollection(name);
+            var collection = await _client.CreateCollection(name, null);
 
             if (collection == null)
                 throw new ArgumentNullException($"An error has occured while creating the chroma collection: {name}");
@@ -484,7 +483,7 @@ namespace Dotnet.Chroma.Repositories
             if (!await CollectionExists(collectionName))
                 throw new InvalidOperationException($"No Chroma Collection has been found with name: {collectionName}");
 
-            var collection = await requestCollection(collectionName);
+            var collection = await _client.GetCollection(collectionName);
 
             var chunks = await requestDocuments(collection.Id, [id], withEmbeddings: true);
 
@@ -493,12 +492,8 @@ namespace Dotnet.Chroma.Repositories
         public async Task<bool> DeleteCollection(string collection)
         {
             if (await CollectionExists(collection))
-            {
-                await requestCollectionDelete(collection);
-
-                return !await CollectionExists(collection);
-            }
-
+                return await _client.DeleteCollection(collection);
+            
             return false;
         }
 
@@ -507,7 +502,7 @@ namespace Dotnet.Chroma.Repositories
             if (!await CollectionExists(collectionName))
                 throw new InvalidOperationException($"No Chroma Collection has been found with name: {collectionName}");
 
-            var collection = await requestCollection(collectionName);
+            var collection = await _client.GetCollection(collectionName);
 
             await requestDelete(collection.Id, [id]);
 
@@ -544,69 +539,45 @@ namespace Dotnet.Chroma.Repositories
         }
 
         // CHROMA DB CLIENT REQUESTS
-        private IAsyncEnumerable<string> requestCollectionList()
-        {
-            try
-            {
-                return _dbClient.ListCollectionsAsync();
-            }
-            catch (HttpOperationException ex)
-            {
-                var error = handleChromaClientError(ex);
+        
 
-                throw new ChromaClientException(error.Code, $"{error.Error}");
-            }
-        }
+        //private async Task<ChromaCollectionModel> requestCollection(string name)
+        //{
+        //    try
+        //    {
+        //        return await client.GetCollectionAsync(name);
+        //    }
+        //    catch (HttpOperationException ex)
+        //    {
+        //        var error = handleChromaClientError(ex);
 
-        private async Task<ChromaCollectionModel> requestCollection(string name)
-        {
-            try
-            {
-                return await _dbClient.GetCollectionAsync(name);
-            }
-            catch (HttpOperationException ex)
-            {
-                var error = handleChromaClientError(ex);
+        //        throw new ChromaClientException(error.Code, $"{nameof(requestCollection)} >> {error.Error}");
+        //    }
+        //}
 
-                throw new ChromaClientException(error.Code, $"{nameof(requestCollection)} >> {error.Error}");
-            }
-        }
+        //private async Task<ChromaCollectionModel> requestNewCollection(string name)
+        //{
+        //    try
+        //    {
+        //        await _dbClient.CreateCollectionAsync(name);
 
-        private async Task<ChromaCollectionModel> requestNewCollection(string name)
-        {
-            try
-            {
-                await _dbClient.CreateCollectionAsync(name);
+        //        return await requestCollection(name);
+        //    }
+        //    catch (HttpOperationException ex)
+        //    {
+        //        var error = handleChromaClientError(ex);
 
-                return await requestCollection(name);
-            }
-            catch (HttpOperationException ex)
-            {
-                var error = handleChromaClientError(ex);
+        //        throw new ChromaClientException(error.Code, $"{nameof(requestNewCollection)} >> {error.Error}");
+        //    }
+        //}
 
-                throw new ChromaClientException(error.Code, $"{nameof(requestNewCollection)} >> {error.Error}");
-            }
-        }
-
-        private async Task requestCollectionDelete(string name)
-        {
-            try
-            {
-                await _dbClient.DeleteCollectionAsync(name);
-            }
-            catch (HttpOperationException ex)
-            {
-                var error = handleChromaClientError(ex);
-
-                throw new ChromaClientException(error.Code, $"{nameof(requestCollectionDelete)} >> {error.Error}");
-            }
-        }
+       
 
         private async Task<DocumentGetResultModel> requestDocuments(string collectionId, List<string> ids, bool withEmbeddings = true)
         {
             try
             {
-                return await _dbClient.GetDocuments(_settings.ServerUrl, collectionId, ids, withEmbeddings: withEmbeddings);
+                return null; // await _dbClient.GetDocuments(_settings.ServerUrl, collectionId, ids, withEmbeddings: withEmbeddings);
             }
             catch (HttpOperationException ex)
             {
