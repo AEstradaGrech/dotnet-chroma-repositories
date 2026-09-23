@@ -44,8 +44,14 @@ namespace Dotnet.Chroma.Repositories
                 
                 var result = await _httpClient.PostAsJsonAsync($"{_settings.BaseUrl()}/collections", new { name = collectionName, configuration = config });
 
-                var content = await result.Content.ReadFromJsonAsync<JsonObject>();
-                return new ChromaCollection { Id = (string)content["id"], Name = (string)content["name"] };
+                if (await validChromaResponse(result))
+                {
+                    var content = await result.Content.ReadFromJsonAsync<JsonObject>();
+
+                    return new ChromaCollection { Id = (string)content["id"], Name = (string)content["name"] };
+                }
+
+                else return null;
             }
             catch (Exception ex) 
             {
@@ -73,7 +79,7 @@ namespace Dotnet.Chroma.Repositories
             {
                 var result = await _httpClient.DeleteAsync($"{_settings.BaseUrl(collectionName)}");
 
-                return result.IsSuccessStatusCode;
+                return await validChromaResponse(result);
             }
             catch (Exception ex)
             {
@@ -89,7 +95,7 @@ namespace Dotnet.Chroma.Repositories
                 {
                     Ids = ids,
                     Includes = ["metadatas", "documents"],
-                    TextMatch = !string.IsNullOrEmpty(textSearch.Trim()) ? $"{{\"$contains\": \"{textSearch}\"}}" : null
+                    TextMatch = !string.IsNullOrEmpty(textSearch) ? $"{{\"$contains\": \"{textSearch}\"}}" : null
                 };
 
                 if (withEmbeddings)
@@ -97,7 +103,7 @@ namespace Dotnet.Chroma.Repositories
 
                 var result = await _httpClient.PostAsJsonAsync($"{_settings.BaseUrl()}/collections/{collection}/get", request);
 
-                return await result.Content.ReadFromJsonAsync<ChromaDocumentModel>();
+                return await validChromaResponse(result) ? await result.Content.ReadFromJsonAsync<ChromaDocumentModel>() : null;
             }
             catch (Exception ex)
             {
@@ -124,7 +130,7 @@ namespace Dotnet.Chroma.Repositories
 
                 var result = await _httpClient.PostAsJsonAsync<ChromaDocumentsRequest>($"{_settings.BaseUrl(collection)}/get", request);
 
-                return await result.Content.ReadFromJsonAsync<ChromaDocumentModel>();
+                return await validChromaResponse(result) ? await result.Content.ReadFromJsonAsync<ChromaDocumentModel>() : null;
             }
             catch (Exception ex)
             {
@@ -132,18 +138,13 @@ namespace Dotnet.Chroma.Repositories
             }
         }
 
-        //Upsert
-
-        private string buildMetadataFilter(Dictionary<string, object> filters)
-            => $"{{\"$and\": [{string.Join(",", filters.Select(kv => $"{{\"{kv.Key}\": \"{kv.Value}\"}}").ToList())}]}}";
-
-        public async Task<bool> UpsertDocument(string collection, ChromaClientUpsertRequest request)
+        public async Task<bool> UpsertDocument(string collectionId, ChromaClientUpsertRequest request)
         {
             try
             {
-                var result = await _httpClient.PostAsJsonAsync($"{_settings.BaseUrl(collection)}/upsert", request);
+                var result = await _httpClient.PostAsJsonAsync($"{_settings.BaseUrl(collectionId)}/upsert", request);
 
-                return result.IsSuccessStatusCode;
+                return await validChromaResponse(result);
             }
             catch (Exception ex)
             {
@@ -157,14 +158,36 @@ namespace Dotnet.Chroma.Repositories
             {
                 var result = await _httpClient.PostAsJsonAsync($"{_settings.BaseUrl(collection)}/delete", new { ids = ids });
 
-                var resultObject = await result.Content.ReadFromJsonAsync<JsonObject>();
+                if (await validChromaResponse(result))
+                {
+                    var resultObject = await result.Content.ReadFromJsonAsync<JsonObject>();
 
-                return resultObject["deleted"].GetValue<int>();
+                    return resultObject["deleted"].GetValue<int>();
+                }
+
+                else return -1;
             }
             catch (Exception ex)
             {
                 throw new ChromaClientException(HttpStatusCode.InternalServerError, $"{nameof(GetDocuments)} >> {ex.Message}");
             }
+        }
+
+        private string buildMetadataFilter(Dictionary<string, object> filters)
+            => $"{{\"$and\": [{string.Join(",", filters.Select(kv => $"{{\"{kv.Key}\": \"{kv.Value}\"}}").ToList())}]}}";
+
+        private async Task<bool> validChromaResponse(HttpResponseMessage response)
+        {
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorMessage = await response.Content.ReadFromJsonAsync<JsonObject>();
+
+                var reasonPhrase = response.ReasonPhrase ?? "Chroma Db Error";
+
+                throw new ChromaClientException(response.StatusCode, $"{reasonPhrase} >> {errorMessage["error"]} >> {errorMessage["message"]}");
+            }
+            
+            return true;
         }
     }
 }

@@ -84,7 +84,7 @@ namespace Dotnet.Chroma.Repositories
         //public async Task<IAsyncEnumerable<string>> GetDbCollections()
         //    => _dbClient.ListCollectionsAsync();
 
-        public async Task<IEnumerable<string>> GetCollections()
+        public async Task<IEnumerable<string>> GetDbCollections()
             => await _client.ListCollections();
         /// <summary>
         /// Gets a Collection of type TCol by it's name
@@ -157,10 +157,13 @@ namespace Dotnet.Chroma.Repositories
         {
             if (string.IsNullOrEmpty(model))
                 model = _settings.EmbeddingModel;
+            if (!dimensions.HasValue)
+                dimensions = _settings.EmbeddingDimensions;
 
             var metadata = getDefaultCollectionMetadata(description, model, dimensions);
 
-            var dataChunk = new ChromaChunk("0", description, new ReadOnlyMemory<float>([]), metadata);
+            //v2 API does not accept empty / null embeddings so ChunkZero is stored with a 'dummy' embedding of the same dimensions than the document chunks
+            var dataChunk = new ChromaChunk("0", description, getDummyEmbedding(dimensions.Value), metadata);
             
             dataChunk.UpdateType((int)EChunkType.COLLECTION);
             dataChunk.AddMetadata(nameof(ChromaCollectionMetadata.CHUNK_TYPE).ToLower(), chunkType);
@@ -195,7 +198,7 @@ namespace Dotnet.Chroma.Repositories
             defaultMetadata.Keys.ToList().ForEach(key => data.AddMetadata(key, defaultMetadata[key], resetDefault: false, isOverride: false));
 
             data.Id = "0";
-            data.Embedding = null;
+
             var upserted = await _client.UpsertDocument(collection.Id, new ChromaClientUpsertRequest
             {
                 Ids = [data.Id],
@@ -572,7 +575,7 @@ namespace Dotnet.Chroma.Repositories
             {
                 Ids = ["0"],
                 Documents = [data.Description],
-                Embeddings = null,
+                Embeddings = [getDummyEmbedding(data.GetMeta<ChromaCollectionMetadata>().DIMENSIONS)],
                 Metadatas = [data.Metadata]
             });
 
@@ -721,7 +724,7 @@ namespace Dotnet.Chroma.Repositories
             {
                 Ids = ["0"],
                 Documents = [collection.Description],
-                Embeddings = [],
+                Embeddings = [getDummyEmbedding(collection.GetMeta<ChromaCollectionMetadata>().DIMENSIONS)],
                 Metadatas = [collection.Metadata]
             });
 
@@ -741,5 +744,8 @@ namespace Dotnet.Chroma.Repositories
 
         public async Task<ChromaCollection> CreateDbCollection(string name, HnswSettings? config = null)
             => await _client.CreateCollection(name, config);
+
+        private ReadOnlyMemory<float> getDummyEmbedding(int dimensions)
+            => new ReadOnlyMemory<float>(Enumerable.Repeat(0.0f, dimensions).ToArray());
     }
 }

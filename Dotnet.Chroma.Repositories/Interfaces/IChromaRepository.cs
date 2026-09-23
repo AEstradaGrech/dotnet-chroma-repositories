@@ -12,7 +12,7 @@ namespace Dotnet.Chroma.Repositories.Models.Interfaces
     /// <typeparam name="TChunk"></typeparam>
     public interface IChromaRepository<TCol, TChunk> where TCol : ChromaChunksCollection<TChunk> where TChunk : ChromaChunk
     {
-        Task<IEnumerable<string>> GetCollections();
+        Task<IEnumerable<string>> GetDbCollections();
         Task<ChromaCollection> CreateDbCollection(string name, HnswSettings? config = null);
         //-------------
         //Task<IAsyncEnumerable<string>> GetDbCollections();
