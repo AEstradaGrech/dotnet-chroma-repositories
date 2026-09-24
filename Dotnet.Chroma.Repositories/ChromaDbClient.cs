@@ -104,9 +104,6 @@ namespace Dotnet.Chroma.Repositories
 
                 var result = await _httpClient.PostAsJsonAsync($"{_settings.BaseUrl()}/collections/{collection}/get", request);
 
-                //var response = await result.Content.ReadFromJsonAsync<JsonObject>();
-
-                //return JsonSerializer.Deserialize<ChromaDocumentModel>(response);
                 return await validChromaResponse(result) ? await result.Content.ReadFromJsonAsync<ChromaDocumentModel>() : null;
             }
             catch (Exception ex)
@@ -188,12 +185,12 @@ namespace Dotnet.Chroma.Repositories
 
                 if(limit.HasValue)
                     url += $"{(offset.HasValue ? "&" : "?")}limit={limit}";
-                
+
                 var result = await _httpClient.PostAsJsonAsync(url, new ChromaQueryRequest
                 {
                     Embeddings = [queryEmbeddings],
                     Results = resultsNumber,
-                    MetadataFilters = metadataFilters != null && metadataFilters.Any() ? buildMetadataFilter(metadataFilters) : null,
+                    MetadataFilters = metadataFilters,//metadataFilters != null && metadataFilters.Any() ? buildMetadataFilter(metadataFilters) : null,
                     Includes = ["documents", "embeddings", "distances", "metadatas"]
                 });
 
@@ -205,8 +202,13 @@ namespace Dotnet.Chroma.Repositories
             }
         }
 
-        private string buildMetadataFilter(Dictionary<string, object> filters)
-            => $"{{\"$and\": [{string.Join(",", filters.Select(kv => $"{{\"{kv.Key}\": \"{kv.Value}\"}}").ToList())}]}}";
+        private Dictionary<string, object> buildMetadataFilter(Dictionary<string, object> filters)
+        {
+            var conditions = new List<object>();
+            filters.Keys.ToList().ForEach(key => conditions.Add(new Dictionary<string, object> { [key] = filters[key] }));
+            filters = new Dictionary<string, object>() { ["$and"] = conditions };
+            return filters;
+        }
 
         private async Task<bool> validChromaResponse(HttpResponseMessage response)
         {

@@ -7,8 +7,10 @@ namespace Dotnet.Chroma.Repositories.Models.Client.Request
 {
     public class ChromaDocumentsRequest
     {
+        //[JsonPropertyName("where")]
+        //public string? MetadataFilters { get; set; } = null;
         [JsonPropertyName("where")]
-        public string? MetadataFilters { get; set; } = null;
+        public Dictionary<string, object>? MetadataFilters { get; set; } = null;
         [JsonPropertyName("where_document")]
         public string? TextMatch { get; set; } = null;
         [JsonPropertyName("include")]
