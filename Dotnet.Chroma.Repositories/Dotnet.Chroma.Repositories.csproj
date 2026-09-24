@@ -7,16 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-	  <PackageReference Include="Microsoft.Build.Tasks.Git" Version="10.0.112">
-	    <PrivateAssets>all</PrivateAssets>
-	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-	  </PackageReference>
 	  <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.12" />
 	  <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.12" />
 	  <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.12" />
 	  <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.12" />
 	  <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.12" />
-	  <PackageReference Include="Microsoft.SemanticKernel.Connectors.Chroma" Version="1.74.0-alpha" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -39,8 +34,4 @@
 		<IncludeSymbols>true</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 	</PropertyGroup>
-
-	<ItemGroup>
-		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
-	</ItemGroup>
 </Project>

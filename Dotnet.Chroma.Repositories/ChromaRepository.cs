@@ -1,23 +1,17 @@
 ﻿
-using Dotnet.Chroma.Repositories.Extensions;
 using Dotnet.Chroma.Repositories.Interfaces;
 using Dotnet.Chroma.Repositories.Models;
 using Dotnet.Chroma.Repositories.Models.Client.Request;
 using Dotnet.Chroma.Repositories.Models.Client.Response;
 using Dotnet.Chroma.Repositories.Models.Enums;
-using Dotnet.Chroma.Repositories.Models.Exceptions;
 using Dotnet.Chroma.Repositories.Models.Interfaces;
 using Dotnet.Chroma.Repositories.Models.Metadata;
 using Dotnet.Chroma.Repositories.Models.Settings;
 using Microsoft.Extensions.Options;
-using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.Connectors.Chroma;
-using System.Net;
-using System.Text.Json;
+
 
 namespace Dotnet.Chroma.Repositories
 {
-#pragma warning disable SKEXP0020 // SK warning >> Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
     /// <summary>
     /// IMPORTANT:
     ///  - For this package: Microsoft.SemanticKernel.Connectors.Chroma --version 1.74.0-alpha
@@ -70,7 +64,7 @@ namespace Dotnet.Chroma.Repositories
         private readonly IChromaDbClient _client;
         protected readonly ChromaSettings _settings;
         
-        public ChromaRepository(IChromaClient client, IChromaDbClient dbClient, IOptions<ChromaSettings> settings)
+        public ChromaRepository(IChromaDbClient dbClient, IOptions<ChromaSettings> settings)
         {
             //_dbClient = client ?? throw new ArgumentNullException(nameof(client));
             _client = dbClient ?? throw new ArgumentNullException(nameof(dbClient));
