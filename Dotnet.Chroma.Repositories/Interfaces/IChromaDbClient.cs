@@ -33,5 +33,6 @@ namespace Dotnet.Chroma.Repositories.Interfaces
 
         Task<bool> UpsertDocument(string collectionId, ChromaClientUpsertRequest request);
         Task<int> DeleteDocuments(string collection, List<string> ids);
+        Task<ChromaQueryModel> QueryDocuments(string collection, ReadOnlyMemory<float> queryEmbeddings, int resultsNumber, Dictionary<string, object>? metadataFilters = null, int? offset = null, int? limit = null);
     }
 }

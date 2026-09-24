@@ -35,6 +35,6 @@ namespace Dotnet.Chroma.Repositories.Models.Interfaces
         Task<int> InsertChunks(string collection, List<ChromaChunk> chunks, Dictionary<string, object> extraMetas = null);
         Task<TChunk> InsertChunk(string collection, ChromaChunk chunk, Dictionary<string, object> extraMetas = null);
         Task<bool> DeleteChunk(string collection, string id);
-        Task<List<ChromaQueryChunk>> QueryCollection(string collection, ReadOnlyMemory<float> queryEmbedding, int resultsNumber, Dictionary<string, object> filters = null);
+        Task<List<ChromaQueryChunk>> QueryCollection(string collection, ReadOnlyMemory<float> queryEmbedding, int resultsNumber, Dictionary<string, object> filters = null, int? offset = null, int? limit = null);
     }
 }

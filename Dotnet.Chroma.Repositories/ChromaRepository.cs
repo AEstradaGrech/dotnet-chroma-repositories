@@ -222,11 +222,11 @@ namespace Dotnet.Chroma.Repositories
         /// <param name="filters"></param>
         /// <returns></returns>
         /// <exception cref="InvalidDataException"></exception>
-        public virtual async Task<List<ChromaQueryChunk>> QueryCollection(string name, ReadOnlyMemory<float> queryEmbedding, int resultsNumber, Dictionary<string, object> filters = null)
+        public virtual async Task<List<ChromaQueryChunk>> QueryCollection(string collectionName, ReadOnlyMemory<float> queryEmbedding, int resultsNumber, Dictionary<string, object> filters = null, int? offset = null, int? limit = null)
         {
-            var collection = await GetCollection(name);
+            var collection = await GetCollection(collectionName);
 
-            var queryResult = await requestQuery(collection.Id, queryEmbedding, resultsNumber, filters);
+            var queryResult = await _client.QueryDocuments(collection.Id, queryEmbedding, resultsNumber, filters, offset, limit);
 
             var results = new List<ChromaQueryChunk>();
 
@@ -238,10 +238,10 @@ namespace Dotnet.Chroma.Repositories
                 var resultDocuments = queryResult.Documents.First();
                 var resultEmbeddings = queryResult.Embeddings.First();
 
-                if (resultIds.Count > resultsNumber || resultIds.Count > resultsNumber || resultMetas.Count > resultsNumber)
+                if (resultIds.Count() > resultsNumber || resultIds.Count() > resultsNumber || resultMetas.Count > resultsNumber)
                     throw new InvalidDataException($"Invalid number of results");
 
-                for (int i = 0; i < resultIds.Count; i++)
+                for (int i = 0; i < resultIds.Count(); i++)
                     results.Add(Activator.CreateInstance(typeof(ChromaQueryChunk), resultIds[i], resultDistances[i], resultDocuments[i], resultEmbeddings[i] ?? new ReadOnlyMemory<float>([]), resultMetas[i] ?? new Dictionary<string, object>()) as ChromaQueryChunk);
             }
 
@@ -677,19 +677,19 @@ namespace Dotnet.Chroma.Repositories
         //    }
         //}
 
-        private async Task<DocumentsQueryResultModel> requestQuery(string collectionId, ReadOnlyMemory<float> queryEmbeddings, int nResults, Dictionary<string, object> filters)
-        {
-            try
-            {
-                return null; // await _dbClient.QueryDocuments(_settings.ServerUrl, collectionId, [queryEmbeddings], nResults, filters);
-            }
-            catch (HttpOperationException ex)
-            {
-                var error = handleChromaClientError(ex);
+        //private async Task<DocumentsQueryResultModel> requestQuery(string collectionId, ReadOnlyMemory<float> queryEmbeddings, int nResults, Dictionary<string, object> filters)
+        //{
+        //    try
+        //    {
+        //        return null; // await _dbClient.QueryDocuments(_settings.ServerUrl, collectionId, [queryEmbeddings], nResults, filters);
+        //    }
+        //    catch (HttpOperationException ex)
+        //    {
+        //        var error = handleChromaClientError(ex);
 
-                throw new ChromaClientException(error.Code, $"{nameof(requestQuery)} >> {error.Error}");
-            }
-        }
+        //        throw new ChromaClientException(error.Code, $"{nameof(requestQuery)} >> {error.Error}");
+        //    }
+        //}
 
         private ChromaClientError handleChromaClientError(HttpOperationException ex)
             => !string.IsNullOrEmpty(ex.ResponseContent) ? JsonSerializer.Deserialize<ChromaClientError>(ex.ResponseContent) : new ChromaClientError { Error = ex.Message, Code = HttpStatusCode.InternalServerError };

@@ -6,6 +6,7 @@ using Dotnet.Chroma.Repositories.Models.Settings;
 using Microsoft.Extensions.Options;
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 
 
@@ -103,6 +104,9 @@ namespace Dotnet.Chroma.Repositories
 
                 var result = await _httpClient.PostAsJsonAsync($"{_settings.BaseUrl()}/collections/{collection}/get", request);
 
+                //var response = await result.Content.ReadFromJsonAsync<JsonObject>();
+
+                //return JsonSerializer.Deserialize<ChromaDocumentModel>(response);
                 return await validChromaResponse(result) ? await result.Content.ReadFromJsonAsync<ChromaDocumentModel>() : null;
             }
             catch (Exception ex)
@@ -134,7 +138,7 @@ namespace Dotnet.Chroma.Repositories
             }
             catch (Exception ex)
             {
-                throw new ChromaClientException(HttpStatusCode.InternalServerError, $"{nameof(GetDocuments)} >> {ex.Message}");
+                throw new ChromaClientException(HttpStatusCode.InternalServerError, $"{nameof(FilterDocuments)} >> {ex.Message}");
             }
         }
 
@@ -148,7 +152,7 @@ namespace Dotnet.Chroma.Repositories
             }
             catch (Exception ex)
             {
-                throw new ChromaClientException(HttpStatusCode.InternalServerError, $"{nameof(GetDocuments)} >> {ex.Message}");
+                throw new ChromaClientException(HttpStatusCode.InternalServerError, $"{nameof(UpsertDocument)} >> {ex.Message}");
             }
         }
 
@@ -169,7 +173,35 @@ namespace Dotnet.Chroma.Repositories
             }
             catch (Exception ex)
             {
-                throw new ChromaClientException(HttpStatusCode.InternalServerError, $"{nameof(GetDocuments)} >> {ex.Message}");
+                throw new ChromaClientException(HttpStatusCode.InternalServerError, $"{nameof(DeleteDocuments)} >> {ex.Message}");
+            }
+        }
+
+        public async Task<ChromaQueryModel> QueryDocuments(string collection, ReadOnlyMemory<float> queryEmbeddings, int resultsNumber, Dictionary<string, object>? metadataFilters = null, int? offset = null, int? limit = null)
+        {
+            try
+            {
+                var url = $"{_settings.BaseUrl(collection)}/query";
+
+                if (offset.HasValue)
+                    url += $"?offset={offset}";
+
+                if(limit.HasValue)
+                    url += $"{(offset.HasValue ? "&" : "?")}limit={limit}";
+                
+                var result = await _httpClient.PostAsJsonAsync(url, new ChromaQueryRequest
+                {
+                    Embeddings = [queryEmbeddings],
+                    Results = resultsNumber,
+                    MetadataFilters = metadataFilters != null && metadataFilters.Any() ? buildMetadataFilter(metadataFilters) : null,
+                    Includes = ["documents", "embeddings", "distances", "metadatas"]
+                });
+
+                return await validChromaResponse(result) ? await result.Content.ReadFromJsonAsync<ChromaQueryModel>() : null;
+            }
+            catch(Exception ex)
+            {
+                throw new ChromaClientException(HttpStatusCode.InternalServerError, $"{nameof(QueryDocuments)} >> {ex.Message}");
             }
         }
 
