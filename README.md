@@ -4,7 +4,7 @@
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![.NET](https://img.shields.io/badge/.NET-10.0%2B-purple.svg)](https://dotnet.microsoft.com/)
 
-> Lightweight ChromaDB repository SDK for .NET that wraps around the Semantic Kernel Microsoft.SemanticKernel.Connectors.Chroma (for now).
+> Lightweight ChromaDB repository SDK for .NET.
 
 This is the repository for the **Estrada.ChromaDB.Repositories** NuGet package. 🎉
 
@@ -29,13 +29,17 @@ This is the repository for the **Estrada.ChromaDB.Repositories** NuGet package. 
 
 ## ⚠️ Important Notes
 
-> **Prerequisites:**
+> **Prerequisites (beta version / chroma-v2 API):**
+> - **Chroma Image:** `chromadb/chroma:1.5.10.dev296`
+> - **Docker Command:** `docker run --name local-chroma-container -v ./chroma-data:/data -p XXXX:8000 chromadb/chroma:0.4.24`
+
+> **Prerequisites (alpha version / chroma-v1 API):**
 > - **Package Version:** `Microsoft.SemanticKernel.Connectors.Chroma --version 1.74.0-alpha`
 > - **Chroma Image:** Use exactly `chromadb/chroma:0.4.24`
 > - **Docker Command:** `docker run --name local-chroma-container -v ./chroma-data:/data -p XXXX:8000 chromadb/chroma:0.4.24`
 
 📝 **Notes:**
-- Future versions plan to remove the Semantic Kernel dependency, but it's required for now.
+- alpha version is using the legacy chroma V1 api and the Semantic Kernel package to handle requests. Use the current beta version (and any other future release) to use the Chroma V2 api without the SK dependency)
 - Use a Docker volume to persist Chroma data. Create a local folder as a 'bridge' to the container and run the command from there.
 
 ## 🔍 How Does It Work

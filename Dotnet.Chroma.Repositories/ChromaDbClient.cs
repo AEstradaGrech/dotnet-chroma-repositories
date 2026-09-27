@@ -190,7 +190,7 @@ namespace Dotnet.Chroma.Repositories
                 {
                     Embeddings = [queryEmbeddings],
                     Results = resultsNumber,
-                    MetadataFilters = metadataFilters,//metadataFilters != null && metadataFilters.Any() ? buildMetadataFilter(metadataFilters) : null,
+                    MetadataFilters = metadataFilters != null && metadataFilters.Any() ? buildMetadataFilter(metadataFilters) : null,
                     Includes = ["documents", "embeddings", "distances", "metadatas"]
                 });
 
