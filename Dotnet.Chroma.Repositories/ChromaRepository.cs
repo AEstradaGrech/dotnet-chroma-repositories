@@ -196,6 +196,9 @@ namespace Dotnet.Chroma.Repositories
 
             data.Id = "0";
 
+            if (data.Embedding.IsEmpty)
+                data.Embedding = getDummyEmbedding(data.DefaultMetadata.DIMENSIONS);
+
             var upserted = await _client.UpsertDocument(collection.Id, new ChromaClientUpsertRequest
             {
                 Ids = [data.Id],
@@ -507,10 +510,12 @@ namespace Dotnet.Chroma.Repositories
 
         public TChunk DefaultChunk(Dictionary<string, object>? metadata = null)
         {
-            var chunk = Activator.CreateInstance(typeof(TChunk)) as TChunk;
+            var chunk = Activator.CreateInstance(typeof(TChunk)) as TChunk ?? throw new ArgumentNullException(nameof(TChunk));
 
             if (metadata != null)
-                chunk.CloneMetadata(metadata);
+                chunk.CloneMetadata(metadata, resetDefault: true);
+
+            chunk.Embedding = getDummyEmbedding(chunk.GetMeta<ChromaMetadata>().DIMENSIONS);
 
             return chunk;
         }
