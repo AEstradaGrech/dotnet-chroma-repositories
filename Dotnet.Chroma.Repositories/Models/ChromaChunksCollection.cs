@@ -1,5 +1,6 @@
 ﻿using Dotnet.Chroma.Repositories.Models.Enums;
 using Dotnet.Chroma.Repositories.Models.Metadata;
+using Dotnet.Chroma.Repositories.Models.Settings;
 using System.Text.Json;
 
 namespace Dotnet.Chroma.Repositories.Models
@@ -37,6 +38,8 @@ namespace Dotnet.Chroma.Repositories.Models
         /// Collection Description mapped from Chunk 0 Text
         /// </summary>
         public string Description { get; set; }
+
+        public HnswSettings Config { get; set; }
 
         /// <summary>
         /// A sample of collection CHUNKS. Defaults to empty

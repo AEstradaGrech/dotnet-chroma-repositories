@@ -83,6 +83,10 @@ namespace Dotnet.Chroma.Repositories
 
         public async Task<IEnumerable<string>> GetDbCollections()
             => await _client.ListCollections();
+
+        public async Task<ChromaCollection> GetDbCollectionInfo(string name)
+            => await _client.GetCollection(name);
+
         /// <summary>
         /// Gets a Collection of type TCol by it's name
         /// Gets the Collection Chunk (ID=0) and 'transforms' it to TCol using the constructors system
@@ -101,8 +105,13 @@ namespace Dotnet.Chroma.Repositories
                 if (data == null)
                     throw new ArgumentNullException($"No data has been found for collection: {name}");
 
-                return Activator.CreateInstance(typeof(TCol), collection.Id, collection.Name, data.Text, data.Metadata) as TCol;
+                var collectionChunk =Activator.CreateInstance(typeof(TCol), collection.Id, collection.Name, data.Text, data.Metadata) as TCol;
+
+                collectionChunk.Config = collection.Config;
+
+                return collectionChunk;
             }
+
             return null;
         }
 
@@ -154,6 +163,7 @@ namespace Dotnet.Chroma.Repositories
         {
             if (string.IsNullOrEmpty(model))
                 model = _settings.EmbeddingModel;
+
             if (!dimensions.HasValue)
                 dimensions = _settings.EmbeddingDimensions;
 
@@ -177,12 +187,12 @@ namespace Dotnet.Chroma.Repositories
         /// <returns></returns>
         /// <exception cref="InvalidDataException"></exception>
         /// <exception cref="ArgumentNullException"></exception>
-        public async Task<TCol> CreateCollection(string name, ChromaChunk data)
+        public async Task<TCol> CreateCollection(string name, ChromaChunk data, HnswSettings? config = null)
         {
             if (await CollectionExists(name))
                 throw new InvalidDataException($"An error has occured while creating the chroma collection: a collection with name {name} already exists");
 
-            var collection = await _client.CreateCollection(name, null);
+            var collection = await _client.CreateCollection(name, config);
 
             if (collection == null)
                 throw new ArgumentNullException($"An error has occured while creating the chroma collection: {name}");

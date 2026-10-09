@@ -14,15 +14,14 @@ namespace Dotnet.Chroma.Repositories.Models.Interfaces
     {
         Task<IEnumerable<string>> GetDbCollections();
         Task<ChromaCollection> CreateDbCollection(string name, HnswSettings? config = null);
-        //-------------
-        //Task<IAsyncEnumerable<string>> GetDbCollections();
+        Task<ChromaCollection> GetDbCollectionInfo(string name);
         Task<bool> CollectionExists(string name);
         Task<List<TCol>> CollectionsOf(int typeEnum);
         Task<TCol> InspectCollection(string name, List<string> chunkIds, bool includeEmbeddings = false);
         Task<TCol> GetCollection(string collection);
         Task<TCol> GetCollectionPage(string collection, Dictionary<string, object>? filters = null, bool withEmbeddings = true, int pageSize = 10, int page = 0);
         Task<TCol> CreateCollection(string collection, string description, string? model = null, int? dimensions = null, int chunkType = (int)EChunkType.DOCUMENT);
-        Task<TCol> CreateCollection(string name, ChromaChunk data);
+        Task<TCol> CreateCollection(string name, ChromaChunk data, HnswSettings? config = null);
         Task<TCol> UpdateCollectionData(string name, Dictionary<string, object> metadata, bool isOverride = true);
         Task<bool> DeleteCollection(string collection);
         TChunk DefaultChunk(Dictionary<string, object>? metadata = null);

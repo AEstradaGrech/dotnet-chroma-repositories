@@ -1,4 +1,5 @@
 ﻿using Dotnet.Chroma.Repositories.Interfaces;
+using Dotnet.Chroma.Repositories.Models.Client;
 using Dotnet.Chroma.Repositories.Models.Client.Request;
 using Dotnet.Chroma.Repositories.Models.Client.Response;
 using Dotnet.Chroma.Repositories.Models.Exceptions;
@@ -45,14 +46,7 @@ namespace Dotnet.Chroma.Repositories
                 
                 var result = await _httpClient.PostAsJsonAsync($"{_settings.BaseUrl()}/collections", new { name = collectionName, configuration = config });
 
-                if (await validChromaResponse(result))
-                {
-                    var content = await result.Content.ReadFromJsonAsync<JsonObject>();
-
-                    return new ChromaCollection { Id = (string)content["id"], Name = (string)content["name"] };
-                }
-
-                else return null;
+                return await validChromaResponse(result) ? await result.Content.ReadFromJsonAsync<ChromaCollection>(new JsonSerializerOptions { Converters = { new ChromaCollectionConverter() } }) : null;
             }
             catch (Exception ex) 
             {
@@ -64,9 +58,7 @@ namespace Dotnet.Chroma.Repositories
         {
             try
             {
-                var collection = await _httpClient.GetFromJsonAsync<ChromaCollection>($"{_settings.BaseUrl(collectionName)}");
-                
-                return collection;
+                return await _httpClient.GetFromJsonAsync<ChromaCollection>($"{_settings.BaseUrl(collectionName)}", new JsonSerializerOptions { Converters = { new ChromaCollectionConverter() } });
             }
             catch(Exception ex)
             {
