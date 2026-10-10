@@ -13,5 +13,12 @@ namespace Dotnet.Chroma.Repositories.Models.Metadata
         public int TOTAL_CHUNKS { get; set; }
         [JsonPropertyName("chunk_type")]
         public int CHUNK_TYPE { get; set; }
+
+        public string ChunkTypeString<TEnum>() where TEnum : Enum
+        {
+            var enumType = Enum.GetUnderlyingType(typeof(TEnum));
+
+            return $"{(TEnum)Convert.ChangeType(CHUNK_TYPE, enumType)}";
+        }
     }
 }

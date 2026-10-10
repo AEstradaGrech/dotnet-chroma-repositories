@@ -12,9 +12,10 @@ namespace Dotnet.Chroma.Repositories.Models.Interfaces
     /// <typeparam name="TChunk"></typeparam>
     public interface IChromaRepository<TCol, TChunk> where TCol : ChromaChunksCollection<TChunk> where TChunk : ChromaChunk
     {
+        Task<string> GetCollectionsInfo();
         Task<IEnumerable<string>> GetDbCollections();
         Task<ChromaCollection> CreateDbCollection(string name, HnswSettings? config = null);
-        Task<ChromaCollection> GetDbCollectionInfo(string name);
+        Task<ChromaCollection> GetDbCollectionSettings(string name);
         Task<bool> CollectionExists(string name);
         Task<List<TCol>> CollectionsOf(int typeEnum);
         Task<TCol> InspectCollection(string name, List<string> chunkIds, bool includeEmbeddings = false);

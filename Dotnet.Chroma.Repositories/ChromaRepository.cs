@@ -8,6 +8,7 @@ using Dotnet.Chroma.Repositories.Models.Interfaces;
 using Dotnet.Chroma.Repositories.Models.Metadata;
 using Dotnet.Chroma.Repositories.Models.Settings;
 using Microsoft.Extensions.Options;
+using System.Text;
 
 
 namespace Dotnet.Chroma.Repositories
@@ -72,19 +73,37 @@ namespace Dotnet.Chroma.Repositories
         }
 
         /// <summary>
+        /// All inherited repositories override GetDbCollections so it returns only the collections of the specific type (CHATS, FILES, SYSTEM, etc)
+        /// except the default ChromaChunksRepository, so the info will be always filtered by chunkt type except for the default repository
+        /// </summary>
+        /// <returns></returns>
+        public async Task<string> GetCollectionsInfo()
+        {
+            var collections = await GetDbCollections();
+
+            var sb = new StringBuilder();
+
+            foreach (var name in collections)
+            {
+                var collection = await GetCollection(name);
+
+                sb.AppendLine().AppendLine(collection.GetCollectionInfo());
+            }
+            
+            return sb.ToString().Trim();
+        }
+
+        /// <summary>
         /// Gets a string list with the name of all DB collections
         /// </summary>
         /// <returns></returns>
-        //public async Task<IAsyncEnumerable<string>> GetDbCollections()
-        //    => _dbClient.ListCollectionsAsync();
-
         public async Task<ChromaCollection> CreateDbCollection(string name, HnswSettings? config = null)
             => await _client.CreateCollection(name, config);
 
-        public async Task<IEnumerable<string>> GetDbCollections()
+        public virtual async Task<IEnumerable<string>> GetDbCollections()
             => await _client.ListCollections();
 
-        public async Task<ChromaCollection> GetDbCollectionInfo(string name)
+        public async Task<ChromaCollection> GetDbCollectionSettings(string name)
             => await _client.GetCollection(name);
 
         /// <summary>
