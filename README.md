@@ -26,7 +26,7 @@ This is the repository for the **Estrada.ChromaDB.Repositories** NuGet package. 
   - 📄 Document property binding
   - 🔍 Metadata filtering
   - 📄 Pagination options
-  - Hnsw Collection configuration to set the `space` query results distance metric, the query `max_neighbors` and other chroma settings
+  - 📄 Hnsw Collection configuration to set the `space` query results distance metric, the query `max_neighbors` and other chroma settings
 
 ## ⚠️ Important Notes
 
