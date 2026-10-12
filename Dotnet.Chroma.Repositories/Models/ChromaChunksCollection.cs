@@ -52,10 +52,10 @@ namespace Dotnet.Chroma.Repositories.Models
         }
 
         public string GetCollectionInfo<TChunkEnum>() where TChunkEnum : Enum
-            => $"# COLLECTIONNAME: {Name}\n- DESCRIPTION: {Description}\n- TYPE: {GetMeta<ChromaCollectionMetadata>().ChunkTypeString<TChunkEnum>()}";
+            => $"# COLLECTION NAME: {Name}\n- DESCRIPTION: {Description}\n- TYPE: {GetMeta<ChromaCollectionMetadata>().ChunkTypeString<TChunkEnum>()}";
 
         public virtual string GetCollectionInfo()
-           => $"# COLLECTIONNAME: {Name}\n- DESCRIPTION: {Description}";
+           => $"# COLLECTION NAME: {Name}\n- DESCRIPTION: {Description}";
 
     }
 }

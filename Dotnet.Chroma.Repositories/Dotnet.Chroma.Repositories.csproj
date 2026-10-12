@@ -18,9 +18,9 @@
   <PropertyGroup>
 	<AssemblyName>Estrada.ChromaDB.Repositories</AssemblyName>
     <PackageId>Estrada.ChromaDB.Repositories</PackageId>
-    <Version>0.0.3-beta</Version>
-	<AssemblyVersion>0.0.3.0</AssemblyVersion>
-	<InformationalVersion>0.0.3-beta</InformationalVersion>
+    <Version>0.0.4-beta</Version>
+	<AssemblyVersion>0.0.4.0</AssemblyVersion>
+	<InformationalVersion>0.0.4-beta</InformationalVersion>
 	<Title>Dotnet Chroma Repositories</Title>
     <Authors>Alvaro Estrada</Authors>
     <Description>Lightweight ChromaDB repository SDK for .NET</Description>
