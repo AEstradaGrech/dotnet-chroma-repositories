@@ -22,10 +22,11 @@ This is the repository for the **Estrada.ChromaDB.Repositories** NuGet package. 
 - 🏗️ A lightweight framework that splits the Chroma data model into **COLLECTIONS** and **CHUNKS**, enabling more C#-friendly interactions with Chroma data.
 - 📚 A repository template of `<TCollection, TChunk>` for seamless access to Chroma and easy manipulation of these structures.
 - 🔧 A default implementation sample, ready to register, inject, and use.
-- ✨ Additional features missing from the Microsoft.SemanticKernel.Connectors.Chroma package:
+- ✨ Common features from the Chroma V2 API:
   - 📄 Document property binding
   - 🔍 Metadata filtering
   - 📄 Pagination options
+  - Hnsw Collection configuration to set the `space` query results distance metric, the query `max_neighbors` and other chroma settings
 
 ## ⚠️ Important Notes
 
@@ -33,14 +34,8 @@ This is the repository for the **Estrada.ChromaDB.Repositories** NuGet package. 
 > - **Chroma Image:** `chromadb/chroma:1.5.10.dev296`
 > - **Docker Command:** `docker run --name local-chroma-container -v ./chroma-data:/data -p XXXX:8000 chromadb/chroma:latest`
 
-> **Prerequisites (alpha version / chroma-v1 API):**
-> - **Package Version:** `Microsoft.SemanticKernel.Connectors.Chroma --version 1.74.0-alpha`
-> - **Chroma Image:** Use exactly `chromadb/chroma:0.4.24`
-> - **Docker Command:** `docker run --name local-chroma-container -v ./chroma-data:/data -p XXXX:8000 chromadb/chroma:0.4.24`
-
 📝 **Notes:**
 - You will need to install **ollama** to generate the embeddings.
-- alpha version is using the legacy chroma V1 api and the Semantic Kernel package to handle requests. Use the current beta version (and any other future release) to use the Chroma V2 api without the SK dependency)
 - Use a Docker volume to persist Chroma data. Create a local folder as a 'bridge' to the container and run the command from there.
 
 ## 🔍 How Does It Work
@@ -77,7 +72,7 @@ The SDK utilizes these core classes to handle ChromaDB data:
 Let's create a repository for embedding multiple files in the same collection. 📁
 
 ### Step 0: Setup
-Use the `AddChromaClient` and optionally `AddChromaConfiguration` startup extensions to register the client and inject `ChromaSettings` from `appsettings.json`. Also, register your repo.
+Use the `AddChromaDbClient` and optionally `AddChromaConfiguration` startup extensions to register the client and inject `ChromaSettings` from `appsettings.json`. Also, register your repo.
 
 ### Steps:
 1. **Create Collection Class** 📂<br>Create a class inheriting from `ChromaCollection` (e.g., `ChromaFilesCollection`).
@@ -100,6 +95,7 @@ Use the `AddChromaClient` and optionally `AddChromaConfiguration` startup extens
 
    *Tip:* Use `DefaultChunk(string collectionName)` for new chunks with predefined settings.
 
+Note: you can use the `AddDefaultChromaRepository` extension method to register a generic chroma repository that makes no distiction between collection chunk types (it features the basic collection & chunk metadatas). Use it to embed and query texts in the most simple way.
 ## 📖 Implementation Sample
 
 This repository originates the package and serves as a sample implementation: [dotnet-llamasharp](https://github.com/AEstradaGrech/dotnet-llamasharp)
