@@ -112,7 +112,7 @@ namespace Dotnet.Chroma.Repositories
                 {
                     Ids = ids,
                     Includes = ["metadatas", "documents"],
-                    TextMatch = !string.IsNullOrEmpty(textSearch.Trim()) ? $"{{\"$contains\": \"{textSearch}\"}}" : null,
+                    TextMatch = textSearch != null && !string.IsNullOrEmpty(textSearch.Trim()) ? $"{{\"$contains\": \"{textSearch}\"}}" : null,
                     Skip = skip,
                     Results = pageSize,
                     MetadataFilters = filters != null && filters.Any() ? buildMetadataFilter(filters) : null
